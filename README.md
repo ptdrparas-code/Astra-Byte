@@ -94,15 +94,26 @@ MONGODB_URI=mongodb://localhost:27017/astrabyte
 The frontend is served at `http://localhost:3000`. It includes sign-in, first-login profile setup, inbox folders, search, message reading, starring, and composing with an optional attachment. It is wired for these same-origin API routes:
 
 - `GET /api/auth/me`
+- `GET /api/auth/users/search?mobile=...` (authenticated mobile-prefix search)
 - `POST /api/auth/login`
+- `GET /api/auth/otp-status`
+- `POST /api/auth/verify-otp`
+- `POST /api/auth/resend-otp`
+- `POST /api/auth/change-password`
 - `POST /api/auth/request-code` (send a sign-in code through Telnyx)
 - `POST /api/auth/complete-profile`
+- `PATCH /api/auth/profile-picture` (save a resized profile image)
 - `POST /api/auth/logout`
-- `GET /api/mail/messages?folder=inbox`
-- `PATCH /api/mail/messages/:id`
-- `POST /api/mail/messages` (multipart message and optional attachment)
+- `GET /api/mail/messages?folder=inbox|sent|starred|archive|trash`
+- `PATCH /api/mail/messages/:id` (read, star, archive, or trash for the signed-in user's mailbox)
+- `POST /api/mail/messages` (multipart message and optional attachment, up to 20 MB)
+- `GET /api/mail/messages/:id/attachment` (private download, limited to the sender and recipient)
 
-These account and mail routes are frontend integration points; the current backend does not implement them yet. The server still contains the existing Telnyx calling routes.
+The account and mail routes use the connected MongoDB database. A 6-digit OTP is sent through Telnyx and must be verified within 5 minutes on the account's first sign-in; later sign-ins with the account password skip OTP. Users on a temporary password must set and confirm a new password next. First-time sign-in asks for a name, age, and optional gender, and stores those details on the user record. Members can upload a profile picture from the separate Profile view. Signed-in members can search for another member by mobile number, send a subject and text, and include an optional attachment. Messages appear in the recipient's Inbox and the sender's Sent folder. Each account has its own read, star, archive, and trash state. Attachments are kept under `storage/mail-attachments/` and are only downloadable by the sender or recipient. Keep that directory on persistent storage when deploying the app. The server also contains the existing Telnyx calling routes.
+
+The web app starts with a language picker for English, Hindi, Marathi, Tamil, Gujarati, Telugu, and Bengali. Interface labels and app messages use the selected language. Dark mode is per tab and resets when that tab is reloaded.
+
+Set `SESSION_SECRET` to a long random value so signed sessions remain valid after server restarts.
 
 ## IVR account provisioning database
 

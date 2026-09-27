@@ -11,6 +11,7 @@ node_modules/
 npm-debug.log*
 coverage/
 dist/
+storage/mail-attachments/
 
 # Local editor and operating system files
 .vscode/
