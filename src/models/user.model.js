@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const profileSchema = new mongoose.Schema({
   name: { type: String, trim: true, maxlength: 100, default: null },
+  nameChangedAt: { type: Date, default: null },
   ageAtRegistration: { type: Number, min: 0, max: 125, default: null },
   dateOfBirth: { type: Date, default: null },
   avatarData: { type: String, default: null, select: false },

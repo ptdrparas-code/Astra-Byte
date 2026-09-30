@@ -5,7 +5,7 @@
     'WELCOME BACK','Welcome back','Please enter your details.','Mobile number or Niti email','Password','Enter your password','Show','Hide','Sign in','Having trouble signing in?','Request a new code','SECURE MEMBER ACCESS','By continuing, you agree to use Niti Mail respectfully and keep your account secure.',
     'SECURE SIGN IN','Check your phone','Enter the 6-digit code we sent to your mobile number.','One-time password','Verify and continue','Code not received?','Send a new code','Use another account',
     'SECURE YOUR ACCOUNT','Set your password','Choose a new password to replace the temporary one sent to your phone.','New password','At least 8 characters','Confirm new password','Re-enter your password','Save password',
-    'ONE LAST STEP','Make it yours','Add a few details to finish setting up your Niti account.','Your name','How should we address you?','Age','Your age','Gender','OPTIONAL','Choose an option','Woman','Man','Non-binary','I describe myself','Prefer not to say','Finish setup','Your age and gender are saved with your Niti profile.',
+    'ONE LAST STEP','Make it yours','Add a few details to finish setting up your Niti account.','Your name','How should we address you?','Age','Your age','Gender','OPTIONAL','Choose an option','Female','Male','Non-binary','I describe myself','Prefer not to say','Finish setup','Your age and gender are saved with your Niti profile.',
     'Compose message','MAILBOX','Inbox','Starred','Sent','Drafts','Archive','Trash','Private circle','Messages stay within Niti','Search users by mobile number','Niti member','Refresh','More options','List view','Compact view','Good morning','Good afternoon','Good evening','A little space for the things worth reading.','Your inbox is clear for now. Messages from Niti members will show up here.','Room to breathe.','Write a message','Niti Mail is a private space. You can message verified Niti members only.','Learn more','Made for meaningful messages','Profile','Main navigation','Open mailbox menu',
     'Your profile','Manage your Niti account details and profile picture.','NITI MEMBER','Mobile number','Not provided','Choose a JPG, PNG, or WebP image. It will be resized before saving.','Change profile picture','Sign out',
     'NEW MESSAGE','Start a conversation','To','Choose a member or enter their Niti email','Search by mobile number above, then choose the member to start a message.','Subject','Add a subject','Message','Write something thoughtful…','Add attachment','Documents and media · 20 MB max','Only Niti members can receive this','Send message','Close','Close message',
@@ -164,6 +164,7 @@
   }
   let language = 'en';
   function t(text, values = {}) {
+    if (text === 'English') return text;
     const index = keys.indexOf(text);
     let output = language === 'en' ? text : (extraTranslations[language]?.[text] || (index < 0 ? text : rows[language]?.[index] || text));
     for (const [name, value] of Object.entries(values)) output = output.replaceAll(`{${name}}`, String(value));
@@ -196,6 +197,8 @@
     document.documentElement.lang = language;
     document.title = t('Niti Mail · Private messaging');
     apply();
+    const englishOption = document.querySelector('#profile-language option[value="en"]');
+    if (englishOption) englishOption.textContent = language === 'hi' ? 'अंग्रेज़ी · English' : 'English';
   }
 
   window.NitiI18n = { t, setLanguage, apply, get language() { return language; }, locales };

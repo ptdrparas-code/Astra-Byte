@@ -1,4 +1,5 @@
 const ivrService = require('../services/ivr.service');
+const telnyxService = require('../services/telnyx.service');
 
 class WebhookController {
   /**
@@ -31,11 +32,17 @@ class WebhookController {
           break;
 
         case 'call.hangup':
+          ivrService.handleCallEnded(payload);
           console.log(`📴 Call has ended. Call ID: ${payload.call_control_id} | Reason: ${payload.hangup_source}`);
           break;
 
         case 'call.initiated':
-          console.log(`📞 Outbound call initiated to: ${payload.to}`);
+          if (payload.direction === 'incoming') {
+            console.log(`📞 Answering inbound call from ${payload.from} to ${payload.to}`);
+            await telnyxService.answerInbound(payload.call_control_id, event.id);
+          } else {
+            console.log(`📞 Outbound call initiated to: ${payload.to}`);
+          }
           break;
 
         default:

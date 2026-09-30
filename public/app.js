@@ -17,10 +17,12 @@ let pageHistory = [];
 let messages = [];
 const selectedMessageIds = new Set();
 let toastTimer;
+let nameChangeUnlockTimer;
 let selectedFile = null;
 let userSearchTimer;
 let userSearchController;
 let userSuggestions = [];
+let passwordResetFlow = false;
 const profileBroadcast = 'BroadcastChannel' in window ? new BroadcastChannel('niti-profile') : null;
 
 async function api(path, options = {}) {
@@ -48,6 +50,51 @@ function toastMessage(message, isError = false) {
   toastTimer = setTimeout(() => toast.classList.remove('visible'), 4000);
 }
 
+function calculateAgeFromDateOfBirth(value, today = new Date()) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return null;
+  const [year, month, day] = value.split('-').map(Number);
+  const birthDate = new Date(Date.UTC(year, month - 1, day));
+  if (birthDate.toISOString().slice(0, 10) !== value) return null;
+  let years = today.getUTCFullYear() - year;
+  let months = today.getUTCMonth() + 1 - month;
+  if (today.getUTCDate() < day) months -= 1;
+  if (months < 0) { years -= 1; months += 12; }
+  if (years < 0 || years > 125) return null;
+  return { years, months };
+}
+
+function updateDateOfBirthPreview() {
+  const input = $('#date-of-birth');
+  const preview = $('#dob-age-preview');
+  if (!input || !preview) return;
+  if (!input.value) {
+    preview.textContent = '';
+    preview.hidden = true;
+    return;
+  }
+  const age = calculateAgeFromDateOfBirth(input.value);
+  preview.hidden = false;
+  preview.textContent = age
+    ? `Current age: ${age.years} ${t('years')}, ${age.months} months`
+    : 'Enter a valid date of birth.';
+}
+
+function updateNameChangeAvailability(user) {
+  const input = $('#profile-name-input');
+  const button = $('#profile-name-save');
+  const policy = $('#profile-name-policy');
+  if (!input || !button || !policy) return;
+  const availableAt = user?.nameChangeAvailableAt ? new Date(user.nameChangeAvailableAt) : null;
+  const locked = availableAt && !Number.isNaN(availableAt.getTime()) && availableAt.getTime() > Date.now();
+  clearTimeout(nameChangeUnlockTimer);
+  input.disabled = Boolean(locked);
+  button.disabled = Boolean(locked);
+  policy.textContent = locked
+    ? `You can change your name again on ${new Intl.DateTimeFormat(i18n.locales[i18n.language] || undefined, { year: 'numeric', month: 'long', day: 'numeric' }).format(availableAt)}.`
+    : 'You can change your name once every 7 days.';
+  if (locked) nameChangeUnlockTimer = setTimeout(() => updateNameChangeAvailability(currentUser), availableAt.getTime() - Date.now() + 100);
+}
+
 function setBusy(button, busy, label) {
   button.disabled = busy;
   const span = button.querySelector('span');
@@ -70,8 +117,9 @@ function showLogin(error = '') {
   $('#login-mobile').focus();
 }
 
-function showOtp(phoneHint = '') {
+function showOtp(phoneHint = '', purpose = 'signin') {
   currentUser = null;
+  passwordResetFlow = purpose === 'reset';
   mailView.hidden = true;
   authView.hidden = false;
   $('#login-card').hidden = true;
@@ -79,13 +127,14 @@ function showOtp(phoneHint = '') {
   $('#change-password-card').hidden = true;
   $('#profile-card').hidden = true;
   $('#otp-intro').textContent = phoneHint
-    ? t('Enter the 6-digit code we sent to {phone}. It expires in 5 minutes.', { phone: phoneHint })
-    : t('Enter the 6-digit code we sent to your mobile number.');
+    ? t(purpose === 'reset' ? 'Enter the password reset code we sent to {phone}. It expires in 5 minutes.' : 'Enter the 6-digit code we sent to {phone}. It expires in 5 minutes.', { phone: phoneHint })
+    : t(purpose === 'reset' ? 'Enter the password reset code we sent to your mobile number.' : 'Enter the 6-digit code we sent to your mobile number.');
+  $('#otp-submit span').textContent = t(purpose === 'reset' ? 'Verify code' : 'Verify and continue');
   otpError.textContent = '';
   $('#otp-code').focus();
 }
 
-function showChangePassword() {
+function showChangePassword(isReset = false) {
   currentUser = null;
   mailView.hidden = true;
   authView.hidden = false;
@@ -93,8 +142,33 @@ function showChangePassword() {
   $('#otp-card').hidden = true;
   $('#change-password-card').hidden = false;
   $('#profile-card').hidden = true;
+  passwordResetFlow = isReset;
+  $('#change-password-title').textContent = t(isReset ? 'Choose a new password' : 'Set your password');
+  $('#change-password-intro').textContent = t(isReset ? 'Your code is verified. Choose a new password for your account.' : 'Choose a new password to replace the temporary one sent to your phone.');
   changePasswordError.textContent = '';
+  ['#new-password', '#confirm-password'].forEach((selector) => {
+    const input = $(selector);
+    input.type = 'password';
+    const toggle = input.parentElement.querySelector('.show-password');
+    toggle.textContent = t('Show');
+    toggle.setAttribute('aria-label', t('Show password'));
+  });
   $('#new-password').focus();
+}
+
+function bindPasswordToggle(selector) {
+  const input = $(selector);
+  input.parentElement.querySelector('.show-password').addEventListener('click', (event) => {
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    event.currentTarget.textContent = t(show ? 'Hide' : 'Show');
+    event.currentTarget.setAttribute('aria-label', t(show ? 'Hide password' : 'Show password'));
+  });
+}
+
+function updateLoginCountryPrefix() {
+  const isEmail = /[a-z@]/i.test($('#login-mobile').value);
+  $('#login-mobile').parentElement.querySelector('.login-country').hidden = isEmail;
 }
 
 function showProfile() {
@@ -132,8 +206,15 @@ function showMailbox(user) {
   $('#profile-display-name').textContent = name;
   $('#profile-display-email').textContent = email;
   $('#profile-display-phone').textContent = currentUser.phoneNumber || '—';
-  $('#profile-display-age').textContent = Number.isInteger(currentUser.age) ? `${currentUser.age} ${t('years')}` : '—';
-  const genders = { woman: 'Woman', man: 'Man', nonbinary: 'Non-binary', self_describe: 'I describe myself', prefer_not_to_say: 'Prefer not to say' };
+  const ageYears = Number.isInteger(currentUser.ageYears) ? currentUser.ageYears : currentUser.age;
+  $('#profile-display-age').textContent = Number.isInteger(ageYears)
+    ? `${ageYears} ${t('years')}${Number.isInteger(currentUser.ageMonths) ? `, ${currentUser.ageMonths} months` : ''}`
+    : '—';
+  const birthDate = currentUser.dateOfBirth ? new Date(`${currentUser.dateOfBirth.slice(0, 10)}T00:00:00Z`) : null;
+  $('#profile-display-dob').textContent = birthDate && !Number.isNaN(birthDate.getTime())
+    ? new Intl.DateTimeFormat(i18n.locales[i18n.language] || undefined, { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }).format(birthDate)
+    : '—';
+  const genders = { woman: 'Female', man: 'Male', nonbinary: 'Non-binary', self_describe: 'I describe myself', prefer_not_to_say: 'Prefer not to say' };
   $('#profile-display-gender').textContent = currentUser.gender ? t(genders[currentUser.gender] || 'Not provided') : t('Not provided');
   const profilePhoto = $('#profile-photo');
   profilePhoto.src = currentUser.profilePicture || '';
@@ -193,6 +274,9 @@ async function showProfilePage(remember = true) {
   hideUserSuggestions();
   if (remember && currentPage !== 'profile') pageHistory.push(currentPage);
   currentPage = 'profile';
+  $('#profile-name-input').value = currentUser?.name || '';
+  $('#profile-name-error').textContent = '';
+  updateNameChangeAvailability(currentUser);
   $('#mail-main').hidden = true;
   $('#profile-view').hidden = false;
   document.querySelectorAll('[data-folder]').forEach((button) => button.classList.remove('active'));
@@ -267,7 +351,12 @@ async function boot() {
   try {
     const otp = await api('/api/auth/otp-status');
     if (otp.pending) {
-      showOtp(otp.phoneHint);
+      showOtp(otp.phoneHint, otp.purpose);
+      return;
+    }
+    const reset = await api('/api/auth/reset-status');
+    if (reset.pending) {
+      showChangePassword(true);
       return;
     }
     const result = await api('/api/auth/me');
@@ -318,19 +407,21 @@ $('#otp-form').addEventListener('submit', async (event) => {
     return;
   }
   const button = $('#otp-submit');
-  setBusy(button, true, 'Verify and continue');
+  const verifyLabel = passwordResetFlow ? 'Verify code' : 'Verify and continue';
+  setBusy(button, true, verifyLabel);
   try {
     const result = await api('/api/auth/verify-otp', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code }),
     });
     $('#otp-code').value = '';
-    continueAfterAuth(result);
+    if (result.requiresPasswordReset) showChangePassword(true);
+    else continueAfterAuth(result);
   } catch (error) {
     otpError.textContent = error.message;
     if (/expired|sign in again|too many/i.test(error.message)) showLogin(error.message);
   } finally {
-    setBusy(button, false, 'Verify and continue');
+    setBusy(button, false, verifyLabel);
   }
 });
 
@@ -338,7 +429,7 @@ $('#resend-otp').addEventListener('click', async () => {
   otpError.textContent = '';
   try {
     const result = await api('/api/auth/resend-otp', { method: 'POST' });
-    toastMessage(t(result.message || 'A new sign-in code was sent.'));
+    toastMessage(t(result.message || (passwordResetFlow ? 'A new password reset code was sent.' : 'A new sign-in code was sent.')));
   } catch (error) {
     otpError.textContent = error.message;
     if (/expired|sign in again/i.test(error.message)) showLogin(error.message);
@@ -369,6 +460,7 @@ $('#change-password-form').addEventListener('submit', async (event) => {
     });
     $('#new-password').value = '';
     $('#confirm-password').value = '';
+    passwordResetFlow = false;
     continueAfterAuth(result);
   } catch (error) {
     changePasswordError.textContent = error.message;
@@ -377,39 +469,44 @@ $('#change-password-form').addEventListener('submit', async (event) => {
   }
 });
 
-$('#resend-code').addEventListener('click', async () => {
+$('#forgot-password').addEventListener('click', async () => {
   const mobile = $('#login-mobile').value.trim();
-  if (!mobile) {
-    loginError.textContent = t('Enter your registered mobile number first.');
+  if (!mobile || mobile.includes('@')) {
+    loginError.textContent = t('Enter your registered mobile number to reset your password.');
     $('#login-mobile').focus();
     return;
   }
   loginError.textContent = '';
+  const button = $('#forgot-password');
+  button.disabled = true;
   try {
-    await api('/api/auth/request-code', {
+    const result = await api('/api/auth/request-password-reset', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mobile }),
     });
-    toastMessage('If this number belongs to a Niti account, a sign-in code has been sent.');
+    showOtp('', 'reset');
+    toastMessage(t(result.message || 'If this number belongs to a Niti account, a password reset code has been sent.'));
   } catch (error) {
     loginError.textContent = error.message;
+  } finally {
+    button.disabled = false;
   }
 });
 
-$('#login-password').parentElement.querySelector('.show-password').addEventListener('click', (event) => {
-  const input = $('#login-password');
-  const show = input.type === 'password';
-  input.type = show ? 'text' : 'password';
-  event.currentTarget.textContent = t(show ? 'Hide' : 'Show');
-});
+bindPasswordToggle('#login-password');
+bindPasswordToggle('#new-password');
+bindPasswordToggle('#confirm-password');
+$('#login-mobile').addEventListener('input', updateLoginCountryPrefix);
+$('#login-form').addEventListener('reset', () => requestAnimationFrame(updateLoginCountryPrefix));
+updateLoginCountryPrefix();
 
 $('#profile-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   profileError.textContent = '';
   const name = $('#full-name').value.trim();
-  const age = Number($('#profile-age').value);
-  if (!name || !Number.isInteger(age) || age < 0 || age > 125) {
-    profileError.textContent = t('Enter your name and a valid age between 0 and 125.');
+  const dateOfBirth = $('#date-of-birth').value;
+  if (!name || !calculateAgeFromDateOfBirth(dateOfBirth)) {
+    profileError.textContent = 'Enter your name and a valid date of birth.';
     return;
   }
   const button = $('#profile-submit');
@@ -417,7 +514,7 @@ $('#profile-form').addEventListener('submit', async (event) => {
   try {
     const result = await api('/api/auth/complete-profile', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, age, gender: $('#gender').value || null }),
+      body: JSON.stringify({ name, dateOfBirth, gender: $('#gender').value || null }),
     });
     if (result.user) showMailbox(result.user);
     else profileError.textContent = t('Profile could not be confirmed. Please try again.');
@@ -425,6 +522,53 @@ $('#profile-form').addEventListener('submit', async (event) => {
     profileError.textContent = error.message;
   } finally {
     setBusy(button, false, 'Finish setup');
+  }
+});
+
+$('#date-of-birth').addEventListener('input', updateDateOfBirthPreview);
+$('#date-of-birth').addEventListener('change', updateDateOfBirthPreview);
+const today = new Date();
+$('#date-of-birth').max = today.toISOString().slice(0, 10);
+
+$('#profile-name-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const name = $('#profile-name-input').value.trim();
+  const error = $('#profile-name-error');
+  error.textContent = '';
+  if (!name || name.length > 100) {
+    error.textContent = 'Enter a name between 1 and 100 characters.';
+    return;
+  }
+  const button = $('#profile-name-save');
+  setBusy(button, true, 'Save name');
+  try {
+    const result = await api('/api/auth/profile-name', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    if (!result.user) throw new Error('Could not save your name right now. Please try again.');
+    currentUser = { ...currentUser, ...result.user };
+    $('#profile-display-name').textContent = name;
+    $('#account-name').textContent = name;
+    const greetingName = $('#greeting-name');
+    if (greetingName) greetingName.textContent = name.trim().split(/\s+/)[0];
+    setAvatar('#account-avatar', currentUser);
+    setAvatar('#top-avatar', currentUser);
+    $('#profile-photo-initials').textContent = name.trim().slice(0, 1).toUpperCase();
+    toastMessage('Name updated successfully.');
+  } catch (updateError) {
+    error.textContent = updateError.message || 'Could not save your name right now. Please try again.';
+    try {
+      const profile = await api('/api/auth/me');
+      if (profile.user) {
+        currentUser = { ...currentUser, ...profile.user };
+        updateNameChangeAvailability(currentUser);
+      }
+    } catch { /* Keep the server's update error visible. */ }
+  } finally {
+    setBusy(button, false, 'Save name');
+    updateNameChangeAvailability(currentUser);
   }
 });
 
@@ -460,7 +604,6 @@ function setFolder(folder, { remember = true } = {}) {
   } else {
     mailTitle.append(document.createTextNode(t(titles[folder] || folder)));
   }
-  $('#mail-subtitle').textContent = folder === 'inbox' ? t('A little space for the things worth reading.') : t('Your {folder} messages, all in one place.', { folder: t(titles[folder] || folder).toLowerCase() });
   updateBackButton();
   loadMessages();
 }
@@ -553,7 +696,32 @@ function renderMessages() {
     main.append(sender, subject, snippet);
     if (message.hasAttachment) { const attachment = document.createElement('span'); attachment.className = 'mail-attachment'; attachment.textContent = `↧ ${t('Attachment')}`; main.append(attachment); }
     const date = document.createElement('time'); date.className = 'mail-row-date'; date.textContent = formatDate(message.createdAt);
-    row.append(checkbox, star, direction, avatar, main, date);
+    const actions = document.createElement('div');
+    actions.className = 'mail-row-actions';
+    actions.setAttribute('role', 'toolbar');
+    actions.setAttribute('aria-label', t('Message actions'));
+    const addAction = (icon, label, patch) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'mail-row-action';
+      button.textContent = icon;
+      button.title = t(label);
+      button.setAttribute('aria-label', t(label));
+      button.addEventListener('click', (event) => {
+        event.stopPropagation();
+        if (patch.deleted && !window.confirm(t('Permanently delete this message? This cannot be undone.'))) return;
+        updateMessage(message, patch);
+      });
+      actions.append(button);
+    };
+    if (currentFolder === 'trash') {
+      addAction('↶', 'Restore message', { trashed: false });
+      addAction('×', 'Delete permanently', { deleted: true });
+    }
+    else if (currentFolder === 'archive') addAction('↩', 'Move to inbox', { archived: false });
+    else addAction('▣', 'Archive message', { archived: true });
+    addAction('✉', message.read ? 'Mark as unread' : 'Mark as read', { read: !message.read });
+    row.append(checkbox, star, direction, avatar, main, date, actions);
     const activateMessage = () => draftMessage ? showDraft(message) : openMessage(message);
     row.addEventListener('click', activateMessage);
     row.addEventListener('keydown', (event) => { if (event.target === row && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); activateMessage(); } });
@@ -568,26 +736,32 @@ function updateSelectionControls() {
   selectAll.indeterminate = selectedCount > 0 && selectedCount < messages.length;
   selectAll.disabled = messages.length === 0;
   const deleteButton = $('#delete-selected');
-  deleteButton.hidden = selectedCount === 0 || currentFolder === 'trash';
-  deleteButton.textContent = selectedCount > 1 ? `${t('Delete')} (${selectedCount})` : t('Delete');
+  deleteButton.hidden = selectedCount === 0;
+  const deleteLabel = currentFolder === 'trash' ? 'Delete permanently' : 'Delete';
+  deleteButton.textContent = selectedCount > 1 ? `${t(deleteLabel)} (${selectedCount})` : t(deleteLabel);
+  deleteButton.title = t(currentFolder === 'trash' ? 'Permanently delete selected messages' : 'Move selected messages to Trash');
+  deleteButton.setAttribute('aria-label', deleteButton.title);
 }
 
 async function moveSelectedToTrash() {
-  if (currentFolder === 'trash') return;
+  const permanently = currentFolder === 'trash';
   const selected = messages.filter((message) => selectedMessageIds.has(message.id));
   if (!selected.length) return;
+  if (permanently && !window.confirm(t('Permanently delete the selected messages? This cannot be undone.'))) return;
   const button = $('#delete-selected');
   button.disabled = true;
   try {
     await Promise.all(selected.map((message) => api(`/api/mail/messages/${encodeURIComponent(message.id)}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ trashed: true }),
+      body: JSON.stringify(permanently ? { deleted: true } : { trashed: true }),
     })));
     selectedMessageIds.clear();
     messages = messages.filter((message) => !selected.some((item) => item.id === message.id));
     renderMessages();
-    toastMessage(selected.length === 1 ? 'Message moved to Trash.' : 'Messages moved to Trash.');
+    toastMessage(permanently
+      ? (selected.length === 1 ? 'Message permanently deleted.' : 'Messages permanently deleted.')
+      : (selected.length === 1 ? 'Message moved to Trash.' : 'Messages moved to Trash.'));
   } catch (error) {
     toastMessage(error.message, true);
     selectedMessageIds.clear();
@@ -650,6 +824,63 @@ function openMessage(message) {
   const body = document.createElement('div'); body.className = 'message-body'; body.textContent = message.body || '';
   dialog.append(head, meta, body);
   if (message.attachmentUrl && message.attachmentName) { const link = document.createElement('a'); link.className = 'message-attachment'; link.href = message.attachmentUrl; link.textContent = `↧ ${message.attachmentName}`; link.rel = 'noopener'; dialog.append(link); }
+  const messageActions = document.createElement('div');
+  messageActions.className = 'message-action-buttons';
+  const recipient = sentMessage ? (message.to || '') : (message.from || '');
+  const subject = message.subject || '';
+  const replySubject = /^re:\s*/i.test(subject) ? subject : `Re: ${subject}`;
+  const quotedBody = String(message.body || '').split('\n').map((line) => `> ${line}`).join('\n');
+  const sentDate = message.createdAt ? new Date(message.createdAt).toLocaleString(i18n.locales[i18n.language]) : '';
+  const senderName = sentMessage ? (currentUser?.name || 'Me') : contactName;
+  const startReply = (quickText) => {
+    backdrop.remove();
+    startNewCompose({ to: recipient });
+    $('#subject').value = replySubject;
+    $('#message-body').value = quickText === undefined
+      ? `\n\nOn ${sentDate}, ${senderName} wrote:\n${quotedBody}`
+      : quickText;
+    $('#message-body').focus();
+  };
+  const quickReplies = document.createElement('div');
+  quickReplies.className = 'quick-reply-buttons';
+  quickReplies.setAttribute('aria-label', 'Quick replies');
+  [
+    { label: '👍', text: '👍', accessibleName: 'Reply with thumbs up' },
+    { label: 'Ok', text: 'Ok', accessibleName: 'Quick reply: Ok' },
+    { label: 'Thanks', text: 'Thanks', accessibleName: 'Quick reply: Thanks' },
+  ].forEach(({ label, text, accessibleName }) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'quick-reply-button';
+    button.textContent = label;
+    button.setAttribute('aria-label', accessibleName);
+    button.addEventListener('click', () => startReply(text));
+    quickReplies.append(button);
+  });
+  const replyButton = document.createElement('button');
+  replyButton.type = 'button';
+  replyButton.className = 'message-action-button';
+  replyButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h9a7 7 0 0 1 7 7v3"/></svg><span>Reply</span>';
+  replyButton.addEventListener('click', () => startReply());
+  const forwardButton = document.createElement('button');
+  forwardButton.type = 'button';
+  forwardButton.className = 'message-action-button';
+  forwardButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5m5 5h-9a7 7 0 0 0-7 7v3"/></svg><span>Forward</span>';
+  forwardButton.addEventListener('click', () => {
+    const subject = message.subject || '';
+    const forwardSubject = /^fwd?:\s*/i.test(subject) ? subject : `Fwd: ${subject}`;
+    const from = sentMessage ? (currentUser?.email || 'Me') : (message.from || contactName);
+    const to = sentMessage ? (message.to || '') : (currentUser?.email || '');
+    const sentDate = message.createdAt ? new Date(message.createdAt).toLocaleString(i18n.locales[i18n.language]) : '';
+    backdrop.remove();
+    startNewCompose();
+    $('#subject').value = forwardSubject;
+    $('#message-body').value = `\n\n---------- Forwarded message ----------\nFrom: ${from}\nTo: ${to}\nDate: ${sentDate}\nSubject: ${subject || t('No subject')}\n\n${message.body || ''}`;
+    $('#message-body').focus();
+  });
+  messageActions.append(replyButton, forwardButton);
+  dialog.append(quickReplies);
+  dialog.append(messageActions);
   backdrop.append(dialog); backdrop.addEventListener('click', (event) => { if (event.target === backdrop) backdrop.remove(); });
   document.body.append(backdrop);
   if (!message.read && message.id) updateMessage(message, { read: true });
@@ -660,7 +891,17 @@ async function updateMessage(message, patch) {
   try {
     await api(`/api/mail/messages/${encodeURIComponent(message.id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
     Object.assign(message, patch);
+    const leavesCurrentFolder = (currentFolder === 'trash' && (patch.deleted === true || patch.trashed === false))
+      || (currentFolder !== 'trash' && patch.trashed === true)
+      || (currentFolder === 'archive' && patch.archived === false)
+      || (currentFolder !== 'archive' && patch.archived === true);
+    if (leavesCurrentFolder) {
+      selectedMessageIds.delete(message.id);
+      messages = messages.filter((item) => item.id !== message.id);
+    }
     renderMessages();
+    if (patch.deleted === true) toastMessage('Message permanently deleted.');
+    else if (currentFolder === 'trash' && patch.trashed === false) toastMessage('Message restored.');
   } catch (error) { toastMessage(error.message, true); }
 }
 
@@ -934,6 +1175,7 @@ $('#compose-form').addEventListener('submit', async (event) => {
 
 $('#account-button').addEventListener('click', () => { $('#account-menu').hidden = !$('#account-menu').hidden; });
 $('#logout-button').addEventListener('click', async () => {
+  if (!window.confirm(t('Are you sure you want to sign out?'))) return;
   $('#login-form').reset();
   $('#login-password').value = '';
   $('#login-password').type = 'password';
@@ -1003,4 +1245,105 @@ $('#theme-toggle').addEventListener('click', (event) => {
   event.currentTarget.querySelector('b').textContent = label;
   event.currentTarget.setAttribute('aria-label', label);
   event.currentTarget.title = label;
+});
+
+const faqChat = $('#faq-chat');
+const faqOpenButton = $('#faq-open');
+const faqChatLog = $('#faq-chat-log');
+const faqChatInput = $('#faq-chat-input');
+
+function appendFaqMessage(text, sender) {
+  const message = document.createElement('div');
+  message.className = `faq-message faq-message-${sender}`;
+  const paragraph = document.createElement('p');
+  paragraph.textContent = text;
+  message.append(paragraph);
+  faqChatLog.append(message);
+  faqChatLog.scrollTop = faqChatLog.scrollHeight;
+}
+
+function getFaqAnswer(question) {
+  const text = question.toLocaleLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
+  if (/trash|deleted?|recover|restore|permanent|permanently/.test(text)) {
+    return 'Open Trash from the mailbox navigation. Select a message to restore it or permanently delete it.';
+  }
+  if (/missing|disappeared|lost/.test(text) && /mail|message|email/.test(text)) {
+    return 'Check Archive and Trash first. You can restore a message from Trash; refresh the mailbox if it may not have loaded yet.';
+  }
+  if (/name|rename/.test(text)) {
+    return 'Open Profile, edit the Change name field, and choose Save name. You can change your name once every 7 days.';
+  }
+  if (/date of birth|birthday|dob|age/.test(text)) {
+    return 'Open Profile to view your date of birth and age. Age is calculated from your date of birth and updates using the current date.';
+  }
+  if (/gender|male|female/.test(text)) {
+    return 'Your gender is shown in Profile. Male and Female are the available profile choices.';
+  }
+  if (/search|find|mobile|phone number|\b91\b/.test(text)) {
+    return 'Enter the member’s mobile number in the search bar and choose Search. You can start with the number itself; you do not need to type 91 first.';
+  }
+  if (/send|compose|write.*mail|new mail|message someone/.test(text)) {
+    return 'Choose Compose a Mail, enter the recipient’s Niti email, write your message, and choose Send message. You can search by mobile number first to find a member.';
+  }
+  if (/quick repl|thumb|\bok\b|thanks|reply/.test(text)) {
+    return 'Open a message to see the quick replies: 👍, Ok, and Thanks. Choosing one opens a reply with that text filled in; you still choose Send message to send it.';
+  }
+  if (/\battach(?:ment)?\b|\bfile\b|photo|document|20 ?mb/.test(text)) {
+    return 'In the compose window, choose Add attachment. Documents and media up to 20 MB are supported.';
+  }
+  if (/draft|save.*later/.test(text)) {
+    return 'Choose Draft in the compose window to save your message. Open Drafts from the mailbox navigation to continue editing it.';
+  }
+  if (/language|translate/.test(text)) {
+    return 'Open Profile and use Select language to choose from the available languages. The app reloads to apply your choice.';
+  }
+  if (/dark|theme|appearance/.test(text)) {
+    return 'Open Profile and use the Dark mode button to switch the app’s appearance.';
+  }
+  if (/star|favorite/.test(text)) {
+    return 'Choose the star control beside a message to mark it as starred, then open Starred to find it later.';
+  }
+  if (/archive/.test(text)) {
+    return 'Use the message action to move a message to Archive. Open Archive to see archived messages; you can move one back to Inbox.';
+  }
+  if (/sign in|log ?in|password|otp|verification|code/.test(text)) {
+    return 'Sign in with your registered mobile number or Niti email and password. If you need a password reset, use the Forgot password link on the sign-in screen.';
+  }
+  return 'I can help with sending and finding messages, Trash, quick replies, attachments, drafts, and profile settings. Could you rephrase your question or tell me which step is giving you trouble? I can’t view private messages or make account changes.';
+}
+
+function closeFaqChat() {
+  faqChat.hidden = true;
+  faqOpenButton.setAttribute('aria-expanded', 'false');
+}
+
+faqOpenButton.addEventListener('click', () => {
+  faqChat.hidden = !faqChat.hidden;
+  faqOpenButton.setAttribute('aria-expanded', String(!faqChat.hidden));
+  if (!faqChat.hidden) faqChatInput.focus();
+});
+$('#faq-close').addEventListener('click', closeFaqChat);
+$('#faq-chat-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const question = faqChatInput.value.trim();
+  if (!question) return;
+  appendFaqMessage(question, 'user');
+  appendFaqMessage(getFaqAnswer(question), 'bot');
+  faqChatInput.value = '';
+  faqChatInput.focus();
+});
+document.querySelectorAll('.faq-quick-questions button').forEach((button) => {
+  button.addEventListener('click', () => {
+    faqChatInput.value = button.textContent;
+    $('#faq-chat-form').requestSubmit();
+  });
+});
+document.addEventListener('click', (event) => {
+  if (!faqChat.hidden && !faqChat.contains(event.target) && event.target !== faqOpenButton) closeFaqChat();
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !faqChat.hidden) {
+    closeFaqChat();
+    faqOpenButton.focus();
+  }
 });

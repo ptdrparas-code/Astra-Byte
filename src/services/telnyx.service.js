@@ -1,5 +1,9 @@
 const { telnyx, callControlAppId, messagingProfileId, phoneNumber } = require('../config/telnyx');
 
+const ttsVoice = process.env.TELNYX_TTS_VOICE || 'AWS.Polly.Joanna-Neural';
+const ttsLanguage = process.env.TELNYX_TTS_LANGUAGE || 'en-US';
+const ttsServiceLevel = process.env.TELNYX_TTS_SERVICE_LEVEL || 'premium';
+
 class TelnyxService {
   /**
    * Initiates an outbound call to a target phone number
@@ -25,17 +29,34 @@ class TelnyxService {
   }
 
   /**
-   * Speaks a prompt with female voice and gathers DTMF digits
+   * Answers an inbound call and marks later webhooks as incoming.
+   * @param {string} callControlId
+   * @param {string} commandId
+   */
+  async answerInbound(callControlId, commandId) {
+    if (!callControlId) {
+      throw new Error('Telnyx call_control_id is missing from the inbound call event');
+    }
+
+    return await telnyx.calls.actions.answer(callControlId, {
+      client_state: Buffer.from(JSON.stringify({ direction: 'incoming' })).toString('base64'),
+      ...(commandId ? { command_id: commandId } : {}),
+    });
+  }
+
+  /**
+   * Speaks a prompt with the configured TTS voice and gathers DTMF digits
    * @param {string} callControlId
    * @param {string} payload - Text to speak
    * @param {object} customOptions
    */
   async gatherUsingSpeak(callControlId, payload, customOptions = {}) {
-    console.log(`🎙️  Gathering input with female TTS for Call ID: ${callControlId}`);
+    console.log(`🎙️  Gathering input with ${ttsVoice} TTS for Call ID: ${callControlId}`);
     return await telnyx.calls.actions.gatherUsingSpeak(callControlId, {
       payload,
-      voice: 'female',
-      language: 'en-US',
+      service_level: ttsServiceLevel,
+      voice: ttsVoice,
+      language: ttsLanguage,
       valid_digits: '123',
       max: 1,
       timeout_millis: 10000,
@@ -44,7 +65,7 @@ class TelnyxService {
   }
 
   /**
-   * Speaks a message in female voice to the caller
+   * Speaks a message with the configured TTS voice to the caller
    * @param {string} callControlId
    * @param {string} payload - Text to speak
    * @param {object} customOptions
@@ -54,8 +75,9 @@ class TelnyxService {
     try {
       return await telnyx.calls.actions.speak(callControlId, {
         payload,
-        voice: 'female',
-        language: 'en-US',
+        service_level: ttsServiceLevel,
+        voice: ttsVoice,
+        language: ttsLanguage,
         ...customOptions,
       });
     } catch (error) {

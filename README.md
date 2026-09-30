@@ -66,7 +66,7 @@ MONGODB_URI=mongodb://localhost:27017/astrabyte
      -d '{"to": "+15551234567"}'
    ```
 2. Telnyx dials the recipient number.
-3. When answered (`call.answered`), the backend speaks the menu in a **female voice**:
+3. When answered (`call.answered`), the backend speaks the menu in a **natural US English neural voice**:
    > *"Hello. Please choose an option from the menu: Press 1 to create an account. Press 2 for forgot password. Press 3 to repeat this menu."*
 4. Caller presses a digit (`call.gather.ended`):
    - **`1` (Create Account)**:
@@ -83,6 +83,10 @@ MONGODB_URI=mongodb://localhost:27017/astrabyte
      - Speaks: *"Sorry, we did not receive a valid selection. Goodbye."* and hangs up.
 
 ---
+
+### IVR voice
+
+The default voice is AWS Polly Joanna Neural. Both menu prompts and follow-up messages use the same voice. To change it, set `TELNYX_TTS_VOICE`, `TELNYX_TTS_LANGUAGE`, and `TELNYX_TTS_SERVICE_LEVEL` in `.env`. Provider voice IDs may require `premium` service level; for example, `AWS.Polly.Joanna-Neural`.
 
 ## 🏃 Commands
 

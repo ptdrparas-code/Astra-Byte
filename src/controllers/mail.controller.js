@@ -32,23 +32,26 @@ function stateQuery(userId, state) {
 function folderQuery(userId, folder) {
   switch (folder) {
     case 'inbox':
-      return { recipient: userId, 'recipientState.archived': false, 'recipientState.trashed': false };
+      return { recipient: userId, 'recipientState.archived': false, 'recipientState.trashed': false, 'recipientState.deleted': { $ne: true } };
     case 'sent':
-      return { sender: userId, isDraft: { $ne: true }, 'senderState.archived': false, 'senderState.trashed': false };
+      return { sender: userId, isDraft: { $ne: true }, 'senderState.archived': false, 'senderState.trashed': false, 'senderState.deleted': { $ne: true } };
     case 'drafts':
-      return { sender: userId, isDraft: true, 'senderState.trashed': false };
+      return { sender: userId, isDraft: true, 'senderState.trashed': false, 'senderState.deleted': { $ne: true } };
     case 'starred':
       return { $or: [
-        { sender: userId, isDraft: { $ne: true }, 'senderState.starred': true, 'senderState.trashed': { $ne: true } },
-        { recipient: userId, isDraft: { $ne: true }, 'recipientState.starred': true, 'recipientState.trashed': { $ne: true } },
+        { sender: userId, isDraft: { $ne: true }, 'senderState.starred': true, 'senderState.trashed': { $ne: true }, 'senderState.deleted': { $ne: true } },
+        { recipient: userId, isDraft: { $ne: true }, 'recipientState.starred': true, 'recipientState.trashed': { $ne: true }, 'recipientState.deleted': { $ne: true } },
       ] };
     case 'archive':
       return { $or: [
-        { sender: userId, isDraft: { $ne: true }, 'senderState.archived': true, 'senderState.trashed': { $ne: true } },
-        { recipient: userId, isDraft: { $ne: true }, 'recipientState.archived': true, 'recipientState.trashed': { $ne: true } },
+        { sender: userId, isDraft: { $ne: true }, 'senderState.archived': true, 'senderState.trashed': { $ne: true }, 'senderState.deleted': { $ne: true } },
+        { recipient: userId, isDraft: { $ne: true }, 'recipientState.archived': true, 'recipientState.trashed': { $ne: true }, 'recipientState.deleted': { $ne: true } },
       ] };
     case 'trash':
-      return { $or: stateQuery(userId, 'trashed') };
+      return { $or: [
+        { sender: userId, 'senderState.trashed': true, 'senderState.deleted': { $ne: true } },
+        { recipient: userId, 'recipientState.trashed': true, 'recipientState.deleted': { $ne: true } },
+      ] };
     default:
       return null;
   }
@@ -276,16 +279,33 @@ class MailController {
     if (!userId) return;
     if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ error: 'Message not found.' });
     const patch = req.body || {};
-    const allowed = ['read', 'starred', 'archived', 'trashed'];
+    const allowed = ['read', 'starred', 'archived', 'trashed', 'deleted'];
     const key = Object.keys(patch).find((candidate) => allowed.includes(candidate));
     if (!key || typeof patch[key] !== 'boolean') return res.status(400).json({ error: 'Choose a valid mailbox action.' });
     try {
       const message = await MailMessage.findOne({ _id: req.params.id, $or: [{ sender: userId }, { recipient: userId }] });
       if (!message) return res.status(404).json({ error: 'Message not found.' });
       const state = String(message.sender) === String(userId) ? message.senderState : message.recipientState;
+      if (key === 'deleted' && patch.deleted !== true) {
+        return res.status(400).json({ error: 'Permanently deleted messages cannot be recovered.' });
+      }
+      if (key === 'deleted' && patch.deleted && !state.trashed) {
+        return res.status(400).json({ error: 'Move the message to Trash before deleting it permanently.' });
+      }
       state[key] = patch[key];
       await message.save();
-      return res.json({ success: true });
+      if (key === 'deleted' && patch.deleted) {
+        const senderDeleted = Boolean(message.senderState?.deleted);
+        const recipientDeleted = !message.recipient || Boolean(message.recipientState?.deleted);
+        if (senderDeleted && recipientDeleted) {
+          const attachmentName = message.attachment?.storageName;
+          await MailMessage.deleteOne({ _id: message._id });
+          if (attachmentName && /^[\da-f-]{36}$/i.test(attachmentName)) {
+            fs.promises.unlink(path.join(attachmentDirectory, attachmentName)).catch(() => {});
+          }
+        }
+      }
+      return res.json({ success: true, permanentlyDeleted: key === 'deleted' && patch.deleted });
     } catch (error) {
       console.error('Mailbox update failed:', error.message);
       return res.status(503).json({ error: 'Could not update this message right now.' });

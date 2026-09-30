@@ -4,7 +4,8 @@ const { generateTemporaryPassword, hashPassword } = require('../utils/credential
 const connectDB = require('../config/database');
 
 function normalizeE164(value) {
-  const digits = String(value || '').replace(/\D/g, '');
+  let digits = String(value || '').replace(/\D/g, '');
+  if (digits.length === 10) digits = `91${digits}`;
   if (!digits || digits.length > 15 || digits.length < 2 || digits.startsWith('0')) {
     throw new Error('The called number is not a valid E.164 phone number.');
   }
@@ -12,7 +13,8 @@ function normalizeE164(value) {
 }
 
 function getEmailAddress(phoneNumber) {
-  return `${phoneNumber.replace(/\D/g, '')}@niti.com`;
+  const digits = String(phoneNumber || '').replace(/\D/g, '');
+  return `${digits.slice(-10)}@niti.com`;
 }
 
 class AccountService {
@@ -26,7 +28,7 @@ class AccountService {
 
     const phoneNumber = normalizeE164(phoneValue);
     const existingUser = await User.findOne({ phoneNumber });
-    if (existingUser) return { exists: true, phoneNumber };
+    if (existingUser) return { exists: true, phoneNumber, emailAddress: existingUser.emailAddress };
 
     const temporaryPassword = generateTemporaryPassword();
     const passwordHash = await hashPassword(temporaryPassword);
@@ -47,7 +49,7 @@ class AccountService {
       // A second simultaneous call may have inserted this phone after our lookup.
       if (error?.code === 11000) {
         const racedUser = await User.findOne({ phoneNumber });
-        if (racedUser) return { exists: true, phoneNumber };
+        if (racedUser) return { exists: true, phoneNumber, emailAddress: racedUser.emailAddress };
       }
       throw error;
     }

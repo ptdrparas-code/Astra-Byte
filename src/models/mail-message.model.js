@@ -5,6 +5,7 @@ const mailboxStateSchema = new mongoose.Schema({
   starred: { type: Boolean, default: false },
   archived: { type: Boolean, default: false },
   trashed: { type: Boolean, default: false },
+  deleted: { type: Boolean, default: false },
 }, { _id: false });
 
 const attachmentSchema = new mongoose.Schema({

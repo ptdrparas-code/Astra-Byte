@@ -2,25 +2,47 @@ const telnyxService = require('./telnyx.service');
 const accountService = require('./account.service');
 
 const MAIN_MENU_PROMPT =
-  'Hello user, thank you for calling. ' +
-  'Press 1 to create an account. ' +
-  'Press 2 for forgot password. ' +
-  'Press 3 to repeat this menu.';
+  'Hello. Thank you for calling Niti Mail. ' +
+  'To create an account, press 1. ' +
+  'For password help, press 2. ' +
+  'To hear these options again, press 3.';
 
 class IVRService {
+  constructor() {
+    this.startingMenus = new Map();
+  }
+
   async handleCallAnswered(payload) {
     const callControlId = payload.call_control_id;
+    const existingStart = this.startingMenus.get(callControlId);
+    if (existingStart) {
+      console.log('Ignoring duplicate answered event for ' + callControlId + '.');
+      return existingStart;
+    }
     console.log('Call answered; starting the IVR menu for ' + callControlId + '.');
 
-    await telnyxService.gatherUsingSpeak(callControlId, MAIN_MENU_PROMPT, {
-      client_state: Buffer.from(JSON.stringify({ menu: 'main' })).toString('base64'),
+    const direction = this.getCallDirection(payload.client_state);
+    const startMenu = telnyxService.gatherUsingSpeak(callControlId, MAIN_MENU_PROMPT, {
+      client_state: this.encodeClientState({ menu: 'main', direction }),
     });
+    this.startingMenus.set(callControlId, startMenu);
+    try {
+      await startMenu;
+    } catch (error) {
+      this.startingMenus.delete(callControlId);
+      throw error;
+    }
+  }
+
+  handleCallEnded(payload) {
+    this.startingMenus.delete(payload.call_control_id);
   }
 
   async handleGatherEnded(payload) {
     const callControlId = payload.call_control_id;
     const digits = payload.digits;
-    const userPhone = payload.to;
+    const direction = this.getCallDirection(payload.client_state);
+    const userPhone = direction === 'incoming' ? payload.from : payload.to;
 
     console.log('Gather ended for ' + callControlId + '; digit received: "' + (digits || '') + '".');
 
@@ -33,7 +55,7 @@ class IVRService {
 
           if (account.exists) {
             failureStage = 'existing-account SMS delivery';
-            await telnyxService.sendSMS(account.phoneNumber, 'You already have an account.');
+            await telnyxService.sendSMS(account.phoneNumber, 'Your Niti Mail login is: ' + account.emailAddress + '. You already have an account.');
             await this.speakAndEnd(callControlId, 'This phone number already has an account. Goodbye.');
             break;
           }
@@ -77,7 +99,7 @@ class IVRService {
       case '3':
         console.log('Repeating the IVR menu for ' + callControlId + '.');
         await telnyxService.gatherUsingSpeak(callControlId, MAIN_MENU_PROMPT, {
-          client_state: Buffer.from(JSON.stringify({ menu: 'main' })).toString('base64'),
+          client_state: this.encodeClientState({ menu: 'main', direction }),
         });
         break;
 
@@ -90,15 +112,7 @@ class IVRService {
 
   async handleSpeakEnded(payload) {
     const callControlId = payload.call_control_id;
-    let clientState = null;
-
-    if (payload.client_state) {
-      try {
-        clientState = JSON.parse(Buffer.from(payload.client_state, 'base64').toString('utf8'));
-      } catch {
-        // Ignore invalid client state and leave the call alone.
-      }
-    }
+    const clientState = this.decodeClientState(payload.client_state);
 
     if (clientState && clientState.action === 'hangup_after_speak') {
       console.log('Speak finished; ending call ' + callControlId + '.');
@@ -110,6 +124,23 @@ class IVRService {
     await telnyxService.speak(callControlId, message, {
       client_state: Buffer.from(JSON.stringify({ action: 'hangup_after_speak' })).toString('base64'),
     });
+  }
+
+  encodeClientState(state) {
+    return Buffer.from(JSON.stringify(state)).toString('base64');
+  }
+
+  decodeClientState(encodedState) {
+    if (!encodedState) return null;
+    try {
+      return JSON.parse(Buffer.from(encodedState, 'base64').toString('utf8'));
+    } catch {
+      return null;
+    }
+  }
+
+  getCallDirection(encodedState) {
+    return this.decodeClientState(encodedState)?.direction === 'incoming' ? 'incoming' : 'outgoing';
   }
 }
 

@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/styles.css?v=draft-feature-1" />
+  <link rel="stylesheet" href="/styles.css?v=profile-photo-clip-1" />
 </head>
 <body>
   <div class="opening-splash" id="opening-splash" aria-hidden="true"><img class="opening-splash-logo" src="/assets/noxis-symbol.png" alt="" /></div>
@@ -18,9 +18,7 @@
     <div class="language-card">
       <img class="site-logo" src="/assets/noxis-symbol.png" alt="" />
       <span class="language-brand">niti<span>mail</span></span>
-      <p class="language-kicker">WELCOME · स्वागत · स्वागत आहे</p>
       <h1 id="language-title">Choose your language</h1>
-      <p class="language-description">Select a language to continue using Niti Mail.</p>
       <div class="language-options" role="group" aria-label="Select language">
         <button type="button" data-language="en" lang="en"><span>English</span><b>English</b></button>
         <button type="button" data-language="hi" lang="hi"><span>हिन्दी</span><b>Hindi</b></button>
@@ -30,7 +28,6 @@
         <button type="button" data-language="te" lang="te"><span>తెలుగు</span><b>Telugu</b></button>
         <button type="button" data-language="bn" lang="bn"><span>বাংলা</span><b>Bengali</b></button>
       </div>
-      <p class="language-note">We'll remember your choice on this device.</p>
     </div>
   </section>
   <section class="auth-view" id="auth-view" hidden>
@@ -64,32 +61,28 @@
         </svg>
       </div>
       <a class="brand brand-light" href="#"><img class="site-logo" src="/assets/noxis-symbol.png" alt="" /><span>niti<span class="brand-soft">mail</span></span></a>
-      <div class="art-copy"><span class="overline">A QUIETER KIND OF INBOX</span><h1>Your people.<br />Your space.</h1><p>A private place for the messages that matter.<br />Only Niti members can write to each other.</p></div>
+      
       <div class="art-orbit orbit-a"></div><div class="art-orbit orbit-b"></div>
-      <div class="art-note note-one"><span class="note-avatar lavender">RK</span><div><b>Riya Kapoor</b><small>Sent you a note</small></div><span class="note-time">now</span></div>
-      <div class="art-note note-two"><span class="note-avatar peach">AS</span><div><b>Arjun Shah</b><small>Shared a document</small></div><span class="note-file">↗</span></div>
-      <div class="art-bottom"><span class="shield">◇</span> Private by design <span class="art-separator">·</span> Niti members only</div>
+      
     </div>
     <div class="auth-main">
       <div class="auth-mobile-brand"><img class="site-logo" src="/assets/noxis-symbol.png" alt="" /><b>niti<span>mail</span></b></div>
       <div class="auth-card" id="login-card">
-        <div class="auth-step">WELCOME BACK <span class="step-dots"><i></i><i></i><i></i></span></div>
-        <h2>Welcome back</h2><p class="auth-intro">Please enter your details.</p>
+        <div class="auth-step"><span class="step-dots"><i></i><i></i><i></i></span></div>
+        <h2>Welcome back</h2>
         <form id="login-form" autocomplete="off">
           <label for="login-mobile">Mobile number or Niti email</label>
-          <div class="input-wrap"><span class="input-prefix login-country"><svg class="india-flag" viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="6.67" fill="#ff9933"/><rect y="6.67" width="30" height="6.66" fill="#fff"/><rect y="13.33" width="30" height="6.67" fill="#138808"/><circle cx="15" cy="10" r="2.25" fill="none" stroke="#000080" stroke-width=".55"/><circle cx="15" cy="10" r=".45" fill="#000080"/><path d="M15 7.75v4.5M12.75 10h4.5m-3.84-1.59 3.18 3.18m0-3.18-3.18 3.18" stroke="#000080" stroke-width=".3"/></svg></span><input id="login-mobile" name="mobile" type="text" placeholder="91 98765 43210 or you@niti.com" autocomplete="username" required /></div>
+          <div class="input-wrap"><span class="input-prefix login-country"><svg class="india-flag" viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="6.67" fill="#ff9933"/><rect y="6.67" width="30" height="6.66" fill="#fff"/><rect y="13.33" width="30" height="6.67" fill="#138808"/><circle cx="15" cy="10" r="2.25" fill="none" stroke="#000080" stroke-width=".55"/><circle cx="15" cy="10" r=".45" fill="#000080"/><path d="M15 7.75v4.5M12.75 10h4.5m-3.84-1.59 3.18 3.18m0-3.18-3.18 3.18" stroke="#000080" stroke-width=".3"/></svg></span><input id="login-mobile" name="mobile" type="text" placeholder="10-digit mobile number or you@niti.com" autocomplete="username" required /></div>
           <label for="login-password">Password</label>
           <div class="input-wrap"><span class="input-leading">⌑</span><input id="login-password" name="password" type="password" placeholder="Enter your password" autocomplete="new-password" required /><button class="show-password" type="button" aria-label="Show password">Show</button></div>
+          <button type="button" class="forgot-password-link" id="forgot-password">Forgot password?</button>
           <div class="auth-error" id="login-error" role="alert"></div>
           <button class="button-primary" id="login-submit" type="submit"><span>Sign in</span><b>→</b></button>
         </form>
-        <div class="auth-help"><span>Having trouble signing in?</span><button type="button" id="resend-code">Request a new code</button></div>
-        <div class="auth-divider"><span></span><small>SECURE MEMBER ACCESS</small><span></span></div>
-        <p class="auth-legal">By continuing, you agree to use Niti Mail respectfully and keep your account secure.</p>
       </div>
 
       <div class="auth-card otp-card" id="otp-card" hidden>
-        <div class="auth-step">SECURE SIGN IN <span class="step-dots"><i class="done"></i><i class="current"></i><i></i></span></div>
+        <div class="auth-step"><span class="step-dots"><i class="done"></i><i class="current"></i><i></i></span></div>
         <h2>Check your phone</h2><p class="auth-intro" id="otp-intro">Enter the 6-digit code we sent to your mobile number.</p>
         <form id="otp-form">
           <label for="otp-code">One-time password</label>
@@ -102,32 +95,33 @@
       </div>
 
       <div class="auth-card change-password-card" id="change-password-card" hidden>
-        <div class="auth-step">SECURE YOUR ACCOUNT <span class="step-dots"><i class="done"></i><i class="done"></i><i class="current"></i></span></div>
-        <h2>Set your password</h2><p class="auth-intro">Choose a new password to replace the temporary one sent to your phone.</p>
+        <div class="auth-step"><span class="step-dots"><i class="done"></i><i class="done"></i><i class="current"></i></span></div>
+        <h2 id="change-password-title">Set your password</h2><p class="auth-intro" id="change-password-intro">Choose a new password to replace the temporary one sent to your phone.</p>
         <form id="change-password-form">
           <label for="new-password">New password</label>
-          <div class="input-wrap"><span class="input-leading">#</span><input id="new-password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="At least 8 characters" required /></div>
+          <div class="input-wrap"><span class="input-leading">#</span><input id="new-password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="At least 8 characters" required /><button class="show-password" type="button" aria-label="Show password">Show</button></div>
           <label for="confirm-password">Confirm new password</label>
-          <div class="input-wrap"><span class="input-leading">#</span><input id="confirm-password" name="confirmPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="Re-enter your password" required /></div>
+          <div class="input-wrap"><span class="input-leading">#</span><input id="confirm-password" name="confirmPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="Re-enter your password" required /><button class="show-password" type="button" aria-label="Show password">Show</button></div>
           <div class="auth-error" id="change-password-error" role="alert"></div>
           <button class="button-primary" id="change-password-submit" type="submit"><span>Save password</span><b>→</b></button>
         </form>
       </div>
 
       <div class="auth-card profile-card" id="profile-card" hidden>
-        <div class="auth-step">ONE LAST STEP <span class="step-dots"><i class="done"></i><i class="current"></i><i></i></span></div>
-        <h2>Make it yours</h2><p class="auth-intro">Add a few details to finish setting up your Niti account.</p>
+        <div class="auth-step"><span class="step-dots"><i class="done"></i><i class="current"></i><i></i></span></div>
+        <h2>Make it yours</h2>
         <form id="profile-form">
           <label for="full-name">Your name</label><div class="input-wrap"><span class="input-leading">✳</span><input id="full-name" name="name" type="text" autocomplete="name" placeholder="How should we address you?" required /></div>
-          <label for="profile-age">Age</label><div class="input-wrap"><span class="input-leading">◷</span><input id="profile-age" name="age" type="number" min="0" max="125" inputmode="numeric" placeholder="Your age" required /></div>
+          <label for="date-of-birth">Date of birth</label><div class="input-wrap dob-input-wrap"><span class="input-leading" aria-hidden="true">▦</span><input id="date-of-birth" name="dateOfBirth" type="date" autocomplete="bday" required /></div>
+          <p class="dob-age-preview" id="dob-age-preview" aria-live="polite" hidden></p>
           <label for="gender">Gender <span class="optional-label">OPTIONAL</span></label>
-          <div class="select-wrap"><select id="gender" name="gender"><option value="">Choose an option</option><option value="woman">Woman</option><option value="man">Man</option><option value="nonbinary">Non-binary</option><option value="self_describe">I describe myself</option><option value="prefer_not_to_say">Prefer not to say</option></select></div>
+          <div class="select-wrap"><select id="gender" name="gender"><option value="">Choose an option</option><option value="woman">Female</option><option value="man">Male</option><option value="nonbinary">Non-binary</option><option value="self_describe">I describe myself</option><option value="prefer_not_to_say">Prefer not to say</option></select></div>
           <div class="auth-error" id="profile-error" role="alert"></div>
           <button class="button-primary" id="profile-submit" type="submit"><span>Finish setup</span><b>→</b></button>
         </form>
-        <p class="profile-privacy">Your age and gender are saved with your Niti profile.</p>
+        <p class="profile-privacy">Your date of birth and gender are saved with your Niti profile.</p>
       </div>
-      <div class="auth-footer"><span>© <span id="auth-year"></span> Niti Mail</span><span><i class="secure-dot"></i> Secure connection</span></div>
+      <div class="auth-footer"><span>© <span id="auth-year"></span> Niti Mail</span></div>
     </div>
   </section>
 
@@ -136,7 +130,7 @@
       <a class="brand mail-brand" href="#inbox"><img class="site-logo" src="/assets/noxis-symbol.png" alt="" /><span>niti<span class="brand-soft">mail</span></span></a>
 
       <nav class="mail-nav" aria-label="Mailbox">
-        <div class="nav-label">MAILBOX</div>
+        
         <button class="folder active" data-folder="inbox"><span class="folder-icon service-icon inbox-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v13H4zM4 13h4l1.5 2h5L16 13h4"/></svg></span><span>Inbox</span><span class="folder-count" id="inbox-count"></span></button>
         <button class="folder" data-folder="starred"><span class="folder-icon service-icon starred-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9z"/></svg></span><span>Starred</span></button>
         <button class="folder" data-folder="sent"><span class="folder-icon service-icon sent-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 3-7.5 18-3.8-7.7L2 9.5 21 3Z"/><path d="M9.7 13.3 21 3"/></svg></span><span>Sent</span></button>
@@ -144,41 +138,50 @@
         <button class="folder" data-folder="archive"><span class="folder-icon service-icon archive-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v4H3zM5 9v11h14V9M9 13h6"/></svg></span><span>Archive</span></button>
         <button class="folder" data-folder="trash"><span class="folder-icon service-icon trash-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3"/></svg></span><span>Trash</span></button>
       </nav>
-      <div class="sidebar-bottom"><div class="membership-card"><span class="membership-icon">◇</span><div><b>Private circle</b><small>Messages stay within Niti</small></div><span class="green-led"></span></div><button class="account-button" id="account-button"><span class="account-avatar" id="account-avatar">N</span><span class="account-info"><b id="account-name">Niti member</b><small id="account-address">member@niti.com</small></span><span class="account-more">···</span></button><div class="account-menu" id="account-menu" hidden><button id="logout-button">Sign out <span>↗</span></button></div></div>
+      <div class="sidebar-bottom"><button class="account-button" id="account-button"><span class="account-avatar" id="account-avatar">N</span><span class="account-info"><b id="account-name">Niti member</b><small id="account-address">member@niti.com</small></span><span class="account-more">···</span></button><div class="account-menu" id="account-menu" hidden><button id="logout-button">Sign out <span>↗</span></button></div></div>
     </aside>
 
     <main class="mail-main" id="mail-main">
-      <header class="mail-topbar"><button class="mobile-sidebar-toggle" id="mobile-sidebar-toggle" aria-label="Open mailbox menu">☰</button><button class="mail-back-button" id="mail-back" type="button" aria-label="Back" title="Back" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m0 0 7-7m-7 7 7 7" /></svg></button><button class="topbar-brand" type="button" data-folder="inbox" aria-label="Niti Mail inbox"><img class="topbar-brand-logo" src="/assets/noxis-symbol.png" alt="" /><span class="topbar-brand-name"><strong>Niti</strong><span> Mail</span></span></button><button class="topbar-compose" id="compose-open" type="button" aria-label="Compose a mail"><span class="topbar-compose-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m16.5 3.5 4 4M4 20l4.1-.9L20 7.2a2.1 2.1 0 0 0-3-3L5.1 16.1 4 20Z" /></svg></span><b>COMPOSE A MAIL</b></button><div class="top-actions"><span class="member-pill"><i></i> Niti member</span><button class="top-help" aria-label="Help">?</button></div></header>
+      <header class="mail-topbar"><button class="mobile-sidebar-toggle" id="mobile-sidebar-toggle" aria-label="Open mailbox menu">☰</button><button class="mail-back-button" id="mail-back" type="button" aria-label="Back" title="Back" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m0 0 7-7m-7 7 7 7" /></svg></button><button class="topbar-brand" type="button" data-folder="inbox" aria-label="Niti Mail inbox"><img class="topbar-brand-logo" src="/assets/noxis-symbol.png" alt="" /><span class="topbar-brand-name"><strong>Niti</strong><span> Mail</span></span></button><button class="topbar-compose" id="compose-open" type="button" aria-label="Compose a mail"><span class="topbar-compose-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m16.5 3.5 4 4M4 20l4.1-.9L20 7.2a2.1 2.1 0 0 0-3-3L5.1 16.1 4 20Z" /></svg></span><b>COMPOSE A MAIL</b></button><div class="top-actions"><button class="top-help" id="faq-open" type="button" aria-haspopup="dialog" aria-controls="faq-chat" aria-expanded="false">FAQ</button></div></header>
       <div class="mail-content">
-        <section class="mail-heading"><div class="mail-heading-copy"><div class="mail-breadcrumb">YOUR SPACE <span>/</span> <b id="folder-title">INBOX</b></div><h1 id="mail-title">Good morning<span class="heading-comma">,</span> <span id="greeting-name">there</span><span class="heading-period">.</span></h1><p id="mail-subtitle">A little space for the things worth reading.</p></div><div class="user-search heading-user-search"><div class="user-search-controls"><div class="mail-search"><span aria-hidden="true">⌕</span><input id="user-search-input" type="search" placeholder="Search User" autocomplete="off" aria-label="Search User" aria-controls="user-search-results" aria-expanded="false" /></div><button class="user-search-submit" id="user-search-submit" type="button">Search</button></div><div class="user-search-results" id="user-search-results" role="listbox" hidden></div></div><div class="mail-heading-tools"><button class="top-profile" id="top-profile" type="button" aria-label="Open profile" title="Profile"><span class="top-profile-avatar" id="top-avatar">N</span><span>Profile</span></button><div class="mail-date" id="mail-date"></div></div></section>
-        <div class="mail-toolbar"><div class="toolbar-left"><label class="select-all"><input type="checkbox" id="select-all" /><span></span></label><button class="tool-button" id="refresh-mail" title="Refresh">↻</button><span class="toolbar-divider"></span><button class="delete-selected-button" id="delete-selected" type="button" title="Move selected messages to Trash" aria-label="Move selected messages to Trash" hidden>Delete</button><span class="results-count" id="results-count"></span></div><div class="toolbar-right"><button class="tool-button" id="view-list" title="List view">☷</button><button class="tool-button active-tool" id="view-compact" title="Compact view">▤</button></div></div>
+        <section class="mail-heading"><div class="mail-heading-copy"><div class="mail-breadcrumb">YOUR SPACE <span>/</span> <b id="folder-title">INBOX</b></div><h1 id="mail-title">Good morning<span class="heading-comma">,</span> <span id="greeting-name">there</span><span class="heading-period">.</span></h1></div><div class="user-search heading-user-search"><div class="user-search-controls"><div class="mail-search"><span aria-hidden="true">⌕</span><input id="user-search-input" type="search" placeholder="Mobile number" autocomplete="off" aria-label="Mobile number" aria-controls="user-search-results" aria-expanded="false" /></div><button class="user-search-submit" id="user-search-submit" type="button">Search</button></div><div class="user-search-results" id="user-search-results" role="listbox" hidden></div></div><div class="mail-heading-tools"><button class="top-profile" id="top-profile" type="button" aria-label="Open profile" title="Profile"><span class="top-profile-avatar" id="top-avatar">N</span><span>Profile</span></button><div class="mail-date" id="mail-date"></div></div></section>
+        <div class="mail-toolbar"><div class="toolbar-left"><label class="select-all"><input type="checkbox" id="select-all" /><span></span></label><button class="tool-button" id="refresh-mail" title="Refresh">↻</button><span class="toolbar-divider"></span><button class="delete-selected-button" id="delete-selected" type="button" title="Move selected messages to Trash" aria-label="Move selected messages to Trash" hidden>Delete</button><span class="results-count" id="results-count"></span></div></div>
         <div class="mail-list" id="mail-list"><div class="mail-loading"><span class="loader"></span>Loading your messages…</div></div>
-        <div class="empty-inbox" id="empty-inbox" hidden><div class="inbox-art"><span class="inbox-ring ring1"></span><span class="inbox-ring ring2"></span><span class="inbox-tray">⌑</span><span class="inbox-spark">✦</span></div><h2>Room to breathe.</h2><p id="empty-copy">Your inbox is clear for now. Messages from Niti members will show up here.</p></div>
-        <div class="mail-notice"><span class="notice-icon">◇</span><span>Niti Mail is a private space. You can message verified Niti members only.</span><a href="#privacy">Learn more</a></div>
-        <footer class="mail-footer"><span>© <span id="mail-year"></span> Niti Mail</span><span>Made for meaningful messages <b>✳</b></span></footer>
+        <div class="empty-inbox" id="empty-inbox" hidden><div class="inbox-art"><span class="inbox-ring ring1"></span><span class="inbox-ring ring2"></span><span class="inbox-tray">⌑</span><span class="inbox-spark">✦</span></div><p id="empty-copy">Your inbox is clear for now. Messages from Niti members will show up here.</p></div>
+        
+        <footer class="mail-footer"><span>© <span id="mail-year"></span> Niti Mail</span></footer>
       </div>
     </main>
     <section class="profile-view" id="profile-view" hidden aria-labelledby="profile-page-title">
       <header class="profile-page-heading">
-        <div><div class="mail-breadcrumb">YOUR SPACE <span>/</span> <b>PROFILE</b></div><h1 id="profile-page-title">Your profile</h1><p>Manage your Niti account details and profile picture.</p></div>
+        <div><div class="mail-breadcrumb">YOUR SPACE <span>/</span> <b>PROFILE</b></div><h1 id="profile-page-title">Your profile</h1></div>
       </header>
       <div class="profile-page-card">
         <div class="profile-identity">
           <div class="profile-photo-wrap">
-            <img id="profile-photo" alt="Your profile picture" hidden />
-            <span class="profile-photo-initials" id="profile-photo-initials">N</span>
+            <div class="profile-photo-crop">
+              <img id="profile-photo" alt="Your profile picture" hidden />
+              <span class="profile-photo-initials" id="profile-photo-initials">N</span>
+            </div>
             <button class="photo-edit-button" id="profile-photo-edit" type="button" aria-label="Change profile picture" title="Change profile picture">✎</button>
             <input id="profile-photo-input" type="file" accept="image/jpeg,image/png,image/webp" hidden />
           </div>
-          <div class="profile-identity-copy"><span class="profile-kicker">NITI MEMBER</span><h2 id="profile-display-name">Niti member</h2><p id="profile-display-email">member@niti.com</p></div>
+          <div class="profile-identity-copy"><h2 id="profile-display-name">Niti member</h2><p id="profile-display-email">member@niti.com</p></div>
         </div>
+        <form class="profile-name-form" id="profile-name-form">
+          <div class="profile-name-copy"><label for="profile-name-input">Change name</label></div>
+          <div class="profile-name-controls"><input id="profile-name-input" name="name" type="text" maxlength="100" autocomplete="name" required /><button class="profile-name-save" id="profile-name-save" type="submit"><span>Save name</span></button></div>
+          <p class="profile-name-policy" id="profile-name-policy" aria-live="polite">You can change your name once every 7 days.</p>
+          <div class="profile-name-error" id="profile-name-error" role="alert"></div>
+        </form>
         <div class="profile-details-grid">
           <div class="profile-detail"><span>Mobile number</span><strong id="profile-display-phone">—</strong></div>
+          <div class="profile-detail profile-dob-detail"><span><i class="dob-calendar-icon" aria-hidden="true">▦</i>Date of birth</span><strong id="profile-display-dob">—</strong></div>
           <div class="profile-detail"><span>Age</span><strong id="profile-display-age">—</strong></div>
           <div class="profile-detail"><span>Gender</span><strong id="profile-display-gender">—</strong></div>
         </div>
         <label class="profile-language-setting" for="profile-language"><span>Select language</span><select id="profile-language" aria-label="Select language"><option value="en">English</option><option value="hi">हिन्दी · Hindi</option><option value="mr">मराठी · Marathi</option><option value="ta">தமிழ் · Tamil</option><option value="gu">ગુજરાતી · Gujarati</option><option value="te">తెలుగు · Telugu</option><option value="bn">বাংলা · Bengali</option></select></label>
-        <div class="profile-photo-help" id="profile-photo-help">Choose a JPG, PNG, or WebP image. It will be resized before saving.</div>
+        
         <div class="profile-photo-error" id="profile-photo-error" role="alert"></div>
         <div class="profile-actions"><button class="theme-toggle" id="theme-toggle" type="button" aria-label="Turn on dark mode" title="Dark mode"><span aria-hidden="true">☾</span><b>Dark mode</b></button><button class="profile-logout-button" id="profile-logout" type="button">Sign out</button></div>
       </div>
@@ -197,12 +200,24 @@
 
   <div class="compose-backdrop" id="compose-backdrop" hidden>
     <section class="compose-dialog" role="dialog" aria-modal="true" aria-labelledby="compose-title">
-      <header class="compose-head"><div><span class="compose-kicker">NEW MESSAGE</span><h2 id="compose-title">Start a conversation</h2></div><button id="compose-close" aria-label="Close">×</button></header>
+      <header class="compose-head"><div><h2 id="compose-title">Start a conversation</h2></div><button id="compose-close" aria-label="Close">×</button></header>
       <form id="compose-form"><input type="hidden" id="draft-id" name="draftId" /><input type="hidden" id="keep-draft-attachment" name="keepAttachment" value="false" /><label for="recipient">To</label><div class="recipient-field"><span>@</span><input id="recipient" name="to" type="email" placeholder="Choose a member or enter their Niti email" autocomplete="off" required /></div><small class="recipient-hint">Search by mobile number above, then choose the member to start a message.</small><label for="subject">Subject <span class="optional-label">OPTIONAL</span></label><input class="compose-input" id="subject" name="subject" type="text" placeholder="Add a subject" maxlength="200" /><label for="message-body">Message</label><textarea id="message-body" name="body" placeholder="Write something thoughtful…" rows="8"></textarea><div class="attachment-row"><button type="button" id="attach-button">＋ Add attachment</button><span id="attachment-name">Documents and media · 20 MB max</span><input type="file" id="attachment-input" hidden /></div><div class="compose-error" id="compose-error" role="alert"></div><footer class="compose-actions"><span>◇ Only Niti members can receive this</span><div class="compose-action-buttons"><button class="draft-button" type="button" id="save-draft">Draft</button><button class="send-button" type="submit" id="send-button">Send message <b>→</b></button></div></footer></form>
     </section>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <section class="faq-chat" id="faq-chat" role="dialog" aria-labelledby="faq-title" hidden>
+    <header class="faq-chat-head"><div><h2 id="faq-title">Niti Mail FAQ</h2></div><button id="faq-close" type="button" aria-label="Close FAQ">×</button></header>
+    <div class="faq-chat-log" id="faq-chat-log" role="log" aria-live="polite" aria-relevant="additions">
+      <div class="faq-message faq-message-bot"><p>Hi! Ask me how to use Niti Mail. I can help with messages, your profile, search, and settings.</p></div>
+    </div>
+    <div class="faq-quick-questions" aria-label="Common questions">
+      <button type="button">How do I recover a message?</button>
+      <button type="button">How do I change my name?</button>
+      <button type="button">How do I send a mail?</button>
+    </div>
+    <form class="faq-chat-form" id="faq-chat-form"><label class="visually-hidden" for="faq-chat-input">Ask a question</label><input id="faq-chat-input" name="question" type="text" maxlength="500" placeholder="Type your question…" autocomplete="off" required /><button type="submit">Send</button></form>
+  </section>
   <script src="/i18n.js" defer></script>
-  <script src="/app.js?v=draft-feature-1" defer></script>
+  <script src="/app.js?v=faq-chat-1" defer></script>
 </body>
 </html>
