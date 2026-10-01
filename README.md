@@ -2,6 +2,8 @@
 
 Outbound IVR calling system built with **Node.js**, **Express**, **Telnyx Call Control API v2**, and exposed via **Tailscale Funnel**.
 
+Youtube video link : https://youtu.be/-vST4kUjXm8?si=27hjnLKue_vlvRcm
+
 ---
 
 ## 🌐 Active Live Endpoints
